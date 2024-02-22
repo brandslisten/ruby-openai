@@ -71,17 +71,18 @@ module OpenAI
     end
 
     def conn(multipart: false)
-      connection = Faraday.new do |f|
-        f.options[:timeout] = @request_timeout
-        f.request(:multipart) if multipart
-        f.use MiddlewareErrors
-        f.response :raise_error
-        f.response :json
+      @connection ||= begin
+        connection = Faraday.new do |f|
+          f.options[:timeout] = @request_timeout
+          f.request(:multipart) if multipart
+          f.use MiddlewareErrors
+          f.response :raise_error
+          f.response :json
+        end
+
+        @faraday_middleware&.call(connection)
+        connection
       end
-
-      @faraday_middleware&.call(connection)
-
-      connection
     end
 
     def uri(path:)
